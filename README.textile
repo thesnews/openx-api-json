@@ -1,0 +1,15 @@
+h1. OpenX JSON API
+
+The JSON API is _mostly_ a wrapper for the existing XMLRPC v2 API except that it has support for non-administrator accounts baked in. So you can actually build a frontend for OpenX that your non-admin users can use to manage your advertising inventory.
+
+The API interfaces with the same library files, in the same way as the standard interface, so user permissions are maintained.
+
+h2. Response format:
+
+<code>
+  {
+    isError: BOOL,
+    message: STRING (not required),
+    data: MIXED
+  }
+</code>
