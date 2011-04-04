@@ -19,16 +19,20 @@ require_once MAX_PATH . '/www/admin/lib-gui.inc.php';
 require_once OX_PATH.'/plugins/jsonAPI/controller.class.php';
 
 $fc = new \jsonAPI\controller($_SERVER['REQUEST_URI']);
-$controller = $fc->getController();
 
-if( $controller ) {
-	$payload = $controller->callAction();
-} else {
-	$payload = new \jsonAPI\response;
-	$payload->setError(true)
-		->setMessage('No or invalid request');
+try {
+	$controller = $fc->getController();
+	
+	if( $controller ) {
+		$payload = $controller->callAction();
+	} else {
+		$payload = new \jsonAPI\response;
+		$payload->setError(true)
+			->setMessage('No or invalid request');
+	}
+	
+	echo $payload;
+} catch( \jsonAPI\exception $e ) {
+	echo new \jsonAPI\response($e->getMessage());
 }
-
-echo $payload;
-
 ?>

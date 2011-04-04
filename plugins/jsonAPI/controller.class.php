@@ -95,6 +95,10 @@ class controller {
 		return false;
 	}
 	
+	protected function getThisUser() {
+		return \OA_Permission::getCurrentUser();
+	}
+	
 	protected function respondWithError($err) {
 		$r = new Response;
 		$r->setError($err)->setMessage($err);
@@ -205,6 +209,20 @@ class response {
 	
 	public function __toString() {
 		return json_encode($this->payload);
+	}
+
+}
+
+class exception extends \Exception {
+
+	protected $message = false;
+	
+	public function __construct($m) {
+		$this->message = $m;
+	}
+	
+	public function __toString() {
+		echo $this->message;
 	}
 
 }
