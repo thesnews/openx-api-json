@@ -30,6 +30,13 @@ class advertiser extends \jsonAPI\controller {
 	public function stats() {
 		$agencyID = $this->getThisUser()->aAccount['agency_id'];
 
+		$start = $this->filterNum(
+			$_POST['start'], strtotime('00:00:00 Yesterday')
+		);
+		$end = $this->filterNum(
+			$_POST['end'], strtotime('23:59:59 Yesterday')
+		);
+
 		$advertisers = false;
 		$campaigins = false;
 		$banners = false;
@@ -43,23 +50,31 @@ class advertiser extends \jsonAPI\controller {
 		$statsAll = array();
 		
 		foreach( $advertisers as $advertiser ) {
-
+			
+			$data = array();
+			
 			$advDLL->getAdvertiserBannerStatistics(
 				$advertiser->advertiserId,
-				new \Date('00:00:00 Yesterday'),
-				new \Date('00:00:00 Today'),
+				new \Date($start),
+				new \Date($end),
 				true,
 				&$data
 			);
 			
-			$data->find();
-			
 			$info = array();
-			$info[] = $advertiser;
+			
+			$info['advertiser'] = $advertiser;
+			$info['stats'] = array();
+
+			if( get_class($data) !== 'MDB2RecordSet' ) {
+				$statsAll[] = $info;
+				continue;
+			}
+
+			$data->find();
 
             while( $data->fetch() ) {
-            	$info[] = 'foo';
-				$info[] = $data->toArray();
+				$info['stats'][] = $data->toArray();
 			}
 			
 			$statsAll[] = $info;
