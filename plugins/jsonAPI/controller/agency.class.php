@@ -41,7 +41,8 @@ class agency extends \jsonAPI\controller {
 		$agency = new \OA_Dll_Agency;
 		
 		if( $_POST['range'] == 'week' ) {
-
+			
+			$start = strtotime('-7 days', $start);
 			for( $i=0; $i<7; $i++ ) {
 				$data = array();
 
