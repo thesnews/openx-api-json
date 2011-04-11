@@ -3,6 +3,9 @@ namespace jsonAPI\controller;
 use jsonAPI\response as Response;
 
 require_once MAX_PATH . '/lib/OA/Dll/Agency.php';
+require_once MAX_PATH . '/lib/OA/Dll/Advertiser.php';
+require_once MAX_PATH . '/lib/OA/Dll/Campaign.php';
+
 
 class agency extends \jsonAPI\controller {
 
@@ -23,6 +26,12 @@ class agency extends \jsonAPI\controller {
 				'range (string)',
 				'int (start)',
 				'int (end)'
+			),
+			'advertisers' => array(
+				'void'
+			),
+			'campaigns' => array(
+				'void'
 			)
 		));
 	}
@@ -67,6 +76,47 @@ class agency extends \jsonAPI\controller {
 		);
 
 		return new Response($data);
+	}
+	
+	public function advertisers() {
+		$agencyID = \OA_Permission::getAgencyId();
+		$agencyLib = new \OA_Dll_Agency;
+		$advLib = new \OA_Dll_Advertiser;
+		$campLib = new \OA_Dll_Campaign;
+		
+		$advertisers = array();
+		
+		$advLib->getAdvertiserListByAgencyId($agencyID, &$advertisers);
+		
+		return new Response($advertisers);
+	}
+	
+	public function campaigns() {
+		$agencyID = \OA_Permission::getAgencyId();
+		$agencyLib = new \OA_Dll_Agency;
+		$advLib = new \OA_Dll_Advertiser;
+		$campLib = new \OA_Dll_Campaign;
+		
+		$advertisers = array();
+		
+		$advLib->getAdvertiserListByAgencyId($agencyID, &$advertisers);
+		$return = array();
+		
+		foreach( $advertisers as $advertiser ) {
+			$entry = array();
+			$entry['advertiser'] = $advertiser;
+			
+			$campaigns = array();
+			$campLib->getCampaignListByAdvertiserId(
+				$advertiser->advertiserId, &$campaigns
+			);
+			
+			$entry['campaigns'] = $campaigns;
+			
+			$return[] = $entry;
+		}
+		
+		return new Response($return);
 	}
 
 }
