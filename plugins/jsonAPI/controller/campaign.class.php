@@ -3,6 +3,8 @@ namespace jsonAPI\controller;
 use jsonAPI\response as Response;
 
 require_once MAX_PATH.'/lib/OA/Dll/Campaign.php';
+require_once MAX_PATH.'/lib/OX/Translation.php';
+require_once MAX_PATH.'/lib/OX/Util/Utils.php';
 
 class campaign extends \jsonAPI\controller {
 
@@ -22,6 +24,7 @@ class campaign extends \jsonAPI\controller {
 	}
 	
 	public function active() {
+		$tx = new \OX_Translation;
 		
 		$campObj = \OA_Dal::factoryDO('campaigns');
 		$clientObj = \OA_Dal::factoryDO('clients');
@@ -40,8 +43,40 @@ class campaign extends \jsonAPI\controller {
 		$return = array();
 		
 		while($campObj->fetch() ) {
-			$return[] = $campObj->toArray();
+			$item = $campObj->toArray();
+			
+			$k = \OX_Util_Utils::getCampaignTypeTranslationKey(
+				$item['priority']
+			);
+			
+			$item['string_type'] = $GLOBALS[$k];
+			
+			$k = \OX_Util_Utils::getCampaignStatusTranslationKey(
+				$item['status']
+			);
+
+			$item['string_status'] = $GLOBALS[$k];
+			
+			$type = '';
+			switch($item['revenue_type']) {
+				case MAX_FINANCE_CPM:
+					$type = 'CPM';
+					break;
+				case MAX_FINANCE_CPC:
+					$type = 'CPC';
+					break;
+				case MAX_FINANCE_CPA:
+					$type = 'CPA';
+					break;
+				case MAX_FINANCE_MT:
+					$type = 'Tenancy';
+					break;
+			}
+			$item['string_revenueType'] = $type;
+			
+			$return[] = $item;
 		}
+		
 		
 		return new Response($return);
 	}

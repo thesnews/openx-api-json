@@ -1,6 +1,8 @@
 <?php
 namespace jsonAPI;
 
+require_once MAX_PATH.'/lib/max/language/en/default.lang.php';
+
 const VERSION = '1.0';
 const BUILDID = '20110401';
 
