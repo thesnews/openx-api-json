@@ -37,6 +37,8 @@ class campaign extends \jsonAPI\controller {
 		$agencyObj->account_id = \OA_Permission::getAccountId();
 		$clientObj->joinAdd($agencyObj);
 		$campObj->joinAdd($clientObj);
+		
+		
 		$campObj->status = \OA_ENTITY_STATUS_RUNNING;
 		$campObj->find();
 		
@@ -73,7 +75,17 @@ class campaign extends \jsonAPI\controller {
 					break;
 			}
 			$item['string_revenueType'] = $type;
-			
+
+			if( $item['priority'] == -1 ) {
+				$item['string_priority'] = 'Exclusive';
+			} elseif( $item['priority'] == -2 ) {
+				$item['string_priority'] = 'ECPM';
+			} elseif( $item['priority'] == 0 ) {
+				$item['string_priority'] = 'Low';
+			} else {
+				$item['string_priority'] = 'High ('.$item['priority'].')';
+			}
+
 			$return[] = $item;
 		}
 		
