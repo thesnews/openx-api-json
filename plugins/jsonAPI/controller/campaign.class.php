@@ -21,85 +21,14 @@ class campaign extends \jsonAPI\controller {
 
 	public function main() {
 		return new Response(array(
-			'active' => array(
-				'void'
-			),
 			'listall' => array(
-				'void'
+				'status (bool)',
+				'sort (string)',
+				'offset (int)'
 			)
 		));
 	}
 	
-	public function active() {
-		$tx = new \OX_Translation;
-		
-		$campObj = \OA_Dal::factoryDO('campaigns');
-		$clientObj = \OA_Dal::factoryDO('clients');
-		$agencyObj = \OA_Dal::factoryDO('agency');
-
-		$accts = \OA_Permission::getOwnedAccounts(
-			\OA_Permission::getAccountId()
-		);
-		
-		$agencyObj->account_id = \OA_Permission::getAccountId();
-		$clientObj->joinAdd($agencyObj);
-		$campObj->joinAdd($clientObj);
-		
-		
-		$campObj->status = \OA_ENTITY_STATUS_RUNNING;
-		$campObj->find();
-		
-		$return = array();
-		
-		while($campObj->fetch() ) {
-			$item = $campObj->toArray();
-			
-			$k = \OX_Util_Utils::getCampaignTypeTranslationKey(
-				$item['priority']
-			);
-			
-			$item['string_type'] = $GLOBALS[$k];
-			
-			$k = \OX_Util_Utils::getCampaignStatusTranslationKey(
-				$item['status']
-			);
-
-			$item['string_status'] = $GLOBALS[$k];
-			
-			$type = '';
-			switch($item['revenue_type']) {
-				case MAX_FINANCE_CPM:
-					$type = 'CPM';
-					break;
-				case MAX_FINANCE_CPC:
-					$type = 'CPC';
-					break;
-				case MAX_FINANCE_CPA:
-					$type = 'CPA';
-					break;
-				case MAX_FINANCE_MT:
-					$type = 'Tenancy';
-					break;
-			}
-			$item['string_revenueType'] = $type;
-
-			if( $item['priority'] == -1 ) {
-				$item['string_priority'] = 'Exclusive';
-			} elseif( $item['priority'] == -2 ) {
-				$item['string_priority'] = 'ECPM';
-			} elseif( $item['priority'] == 0 ) {
-				$item['string_priority'] = 'Low';
-			} else {
-				$item['string_priority'] = 'High ('.$item['priority'].')';
-			}
-
-			$return[] = $item;
-		}
-		
-		
-		return new Response($return);
-	}
-
 	public function listall() {
 		$agencyID = \OA_Permission::getAgencyId();
 		$campaigns = \OA_Dal::factoryDO('campaigns');
@@ -113,9 +42,32 @@ class campaign extends \jsonAPI\controller {
 		
 //		$campaigns->selectAdd();
 //		$campaigns->selectAdd('campaignId');
-		
+
+		// excludes the OpenXMarkert stuff		
 		$campaigns->type = \DataObjects_Campaigns::CAMPAIGN_TYPE_DEFAULT;
-//		$campaigns->status = \OA_ENTITY_STATUS_RUNNING;
+
+		if( $_POST['status'] == 'active' ) {
+			$campaigns->status = \OA_ENTITY_STATUS_RUNNING;
+		} elseif( $_POST['status'] == 'inactive' ) {
+			$campaigns->whereAdd('status != '.\OA_ENTITY_STATUS_RUNNING);
+		}
+		
+		$order = 'campaignname asc';
+		
+		switch( $_POST['sort'] ) {
+			case 'start':
+				$order = 'activate_time asc';
+				break;
+			case 'end':
+				$order = 'expire_time asc';
+				break;
+			case 'client':
+				$order = 'clientname asc';
+				break;
+		}
+		
+		$campaigns->orderBy($order);
+
 		$campaigns->find();
 		
 		$out = array();
@@ -125,6 +77,8 @@ class campaign extends \jsonAPI\controller {
 			
 			$out[] = $o;
 		}
+		
+		$campaigns->free();
 
 		return new Response($out);
 	}
