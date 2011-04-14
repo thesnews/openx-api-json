@@ -90,6 +90,7 @@ class controller {
 		
 		if( \OA_Auth::isLoggedIn() ) {
 			$this->sessionID = $s;
+			\OA_Preferences::loadPreferences();
 		
 			return true;
 		}
