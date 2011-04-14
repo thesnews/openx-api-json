@@ -8,6 +8,8 @@ require_once MAX_PATH.'/lib/OX/Translation.php';
 require_once MAX_PATH.'/lib/OX/Util/Utils.php';
 //require_once MAX_PATH.'/lib/OA/Dal.php';
 
+require_once MAX_PATH.'/plugins/jsonAPI/model/campaign.class.php';
+
 class campaign extends \jsonAPI\controller {
 
 	public function __construct($a) {
@@ -100,89 +102,31 @@ class campaign extends \jsonAPI\controller {
 
 	public function listall() {
 		$agencyID = \OA_Permission::getAgencyId();
-		$campaignDLL = new \OA_DLL_Campaign;
-		$campaignDAL = \OA_Dal::factoryDAL('campaigns');
+		$campaigns = \OA_Dal::factoryDO('campaigns');
+		$clients = \OA_Dal::factoryDO('clients');
+		$agencies = \OA_Dal::factoryDO('agency');
 
-		$clientDLL = new \OA_DLL_Advertiser;		
-
-		$dbh = \OA_DB::singleton();
-		$tableM = $dbh->quoteIdentifier(\OA_Dal::getTablePrefix().'campaigns', true);
-		$tableC = $dbh->quoteIdentifier(\OA_Dal::getTablePrefix().'clients', true);
+		// only campaigns for this user
+		$agencies->account_id = \OA_Permission::getAccountId();
+		$clients->joinAdd($agencies);
+		$campaigns->joinAdd($clients);
 		
-		$q =  "SELECT m.campaignId as id, m.status as status, m.revenue_type as revenue_type".
-            " FROM ".$tableM." AS m".
-            ",".$tableC." AS c".
-            " WHERE m.clientid=c.clientid".
-            " AND c.agencyid=". \DBC::makeLiteral($agencyID) .
-//            " AND m.status=".\OA_ENTITY_STATUS_RUNNING .
-	        " AND m.type = ". \DataObjects_Campaigns::CAMPAIGN_TYPE_DEFAULT;
-		$ret = $dbh->query($q);
+//		$campaigns->selectAdd();
+//		$campaigns->selectAdd('campaignId');
 		
-		$return = array();
+		$campaigns->type = \DataObjects_Campaigns::CAMPAIGN_TYPE_DEFAULT;
+//		$campaigns->status = \OA_ENTITY_STATUS_RUNNING;
+		$campaigns->find();
 		
-		while( ($row = $ret->fetchRow())) {
-			$data = false;
-			$campaignDLL->getCampaign($row['id'], &$data);
+		$out = array();
+		
+		while($campaigns->fetch()) {
+			$o = new \jsonAPI\model\campaign($campaigns->toArray());
 			
-			$clientData = false;
-			$clientDLL->getAdvertiser($data->advertiserId, &$clientData);
-			$data->client = $clientData;
-
-			if( $data->startDate && is_object($data->startDate) ) {
-				$data->startDate = $data->startDate->getTime();
-			}
-			if( $data->endDate && is_object($data->endDate) ) {
-				$data->endDate = $data->endDate->getTime();
-			}
-
-			$desc = array();
-
-			$k = \OX_Util_Utils::getCampaignTypeTranslationKey(
-				$data->priority
-			);
-			
-			$desc['type'] = $GLOBALS[$k];
-			
-			$k = \OX_Util_Utils::getCampaignStatusTranslationKey(
-				$row['status']
-			);
-
-			$desc['status'] = $GLOBALS[$k];
-			
-			if( $data->priority == -1 ) {
-				$desc['priority'] = 'Exclusive';
-			} elseif( $data->priority == -2 ) {
-				$desc['priority'] = 'ECPM';
-			} elseif( $data->priority == 0 ) {
-				$desc['priority'] = 'Low';
-			} else {
-				$desc['priority'] = 'High ('.$data->priority.')';
-			}
-
-			switch( $row['revenue_type'] ) {
-				case \MAX_FINANCE_CPM:
-					$desc['revenueType'] = 'CPM (Impressions)';
-					break;
-				case \MAX_FINANCE_CPC:
-					$desc['revenueType'] = 'CPC (Clicks)';
-					break;
-				case \MAX_FINANCE_CPA:
-					$desc['revenueType'] = 'CPA (Activity)';
-					break;
-				case \MAX_FINANCE_MT:
-				default:
-					$desc['revenueType'] = 'Tenancy';
-					break;
-			}
-
-			$data->description = $desc;
-
-			$return[] = $data;
+			$out[] = $o;
 		}
-		
-		$ret->free();
 
-		return new Response($return);
+		return new Response($out);
 	}
 
 }

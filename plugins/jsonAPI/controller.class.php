@@ -2,6 +2,7 @@
 namespace jsonAPI;
 
 require_once MAX_PATH.'/lib/max/language/en/default.lang.php';
+require_once MAX_PATH.'/plugins/jsonAPI/model.class.php';
 
 const VERSION = '1.0';
 const BUILDID = '20110401';
@@ -205,6 +206,22 @@ class response {
 	}
 	
 	public function setData($data) {
+		if( is_array($data) ) {
+			$out = array();
+			foreach( $data as $item ) {
+				if( 
+					is_object($item) 
+					&& is_subclass_of($item, '\\jsonAPI\\model') 
+				) {
+					$out[] = $item->toArray();
+				} else {
+					$out[] = $item;
+				}
+			}
+			
+			$data = $out;
+		}
+	
 		$this->payload['data'] = $data;
 		
 		return $this;
