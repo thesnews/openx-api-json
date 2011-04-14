@@ -6,6 +6,8 @@ require_once MAX_PATH . '/lib/OA/Dll/Agency.php';
 require_once MAX_PATH . '/lib/OA/Dll/Advertiser.php';
 require_once MAX_PATH . '/lib/OA/Dll/Campaign.php';
 
+require_once MAX_PATH.'/lib/OA/Dal/Statistics/Agency.php';
+
 
 class agency extends \jsonAPI\controller {
 
@@ -22,10 +24,9 @@ class agency extends \jsonAPI\controller {
 				'void'
 			),
 			'stats' => array(
-				'string (type)',
 				'range (string)',
-				'int (start)',
-				'int (end)'
+				'start (string [YYYY-MM-DD])',
+				'end (string [YYYY-MM-DD])'
 			),
 			'advertisers' => array(
 				'void'
@@ -38,42 +39,60 @@ class agency extends \jsonAPI\controller {
 	
 	public function stats() {
 	
-		$agencyID = $this->getThisUser()->aAccount['agency_id'];
-
-		$start = $this->filterNum(
-			$_POST['start'], strtotime('00:00:00 Yesterday')
-		);
-		$end = $this->filterNum(
-			$_POST['end'], strtotime('23:59:59 Yesterday')
-		);
-		
+		$agencyID = \OA_Permission::getAgencyId();
 		$agency = new \OA_Dll_Agency;
 		
-		if( $_POST['range'] == 'week' ) {
-			
-			$start = strtotime('-7 days', $start);
-			for( $i=0; $i<7; $i++ ) {
-				$data = array();
+		$range = false;
+		$offset = false;
+		switch( $this->filterString($_POST['range']) ) {
+			case 'week':
+				$offset = '-1 week';
+			case 'day':
+				$offset = '-1 day';
+			case 'month':
+				$offset = '-1 month';
+				$range = $this->filterString($_POST['range']);
+				break;
+		}
 
-				$startDate = strtotime('+'.$i.' days 00:00:00', $start);
-				$endDate = strtotime('+'.$i.' days 23:59:59', $start);
-				
-				$agency->getAgencyDailyStatistics(
-					$agencyID, new \Date($startDate), new \Date($endDate),
-					true, &$data
-				);
-				
-				$return[] = $data;
-			}
-			
-			return new Response($return);
+		$start = $this->filterString($_POST['start']);
+		$end = $this->filterString($_POST['end']);
+		
+		// this may all see a bit heavy handed, but I just want to make sure
+		// everything is UTC time
+		$tz = new \DateTimeZone('UTC');
+		
+		if( !$start ) {
+			$start = new \DateTime(date('Y-m-d'), $tz);
+			$start->modify('-1 day');
+		} else {
+			$start = new \DateTime($start, $tz);
 		}
 		
-		$data = false;
+		if( !$end ) {
+			$end = new \DateTime($start->format('Y-m-d'), $tz);
+			$end->modify('+1 day');
+		} else {
+			$end = new \DateTime($end, $tz);
+		}
 		
-		$agency->getAgencyDailyStatistics(
-			$agencyID, new \Date($start), new \Date($end), true, &$data
-		);
+		if( $range ) {
+			$data = array();
+			
+			$e = new \Date($start->format('Y-m-d'));
+			$s = new \Date($start->modify($offset)->format('Y-m-d'));
+
+			$agency->getAgencyDailyStatistics($agencyID, $s, $e, true, &$data);
+
+			return new Response($data);
+			
+		}
+		
+		$data = array();
+		
+		$s = new \Date($start->format('Y-m-d'));
+		$e = new \Date($end->format('Y-m-d'));
+		$agency->getAgencyDailyStatistics($agencyID, $s, $e, true, &$data);
 
 		return new Response($data);
 	}
