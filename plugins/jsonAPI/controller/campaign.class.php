@@ -25,8 +25,47 @@ class campaign extends \jsonAPI\controller {
 				'status (bool)',
 				'sort (string)',
 				'offset (int)'
+			),
+			'fetch' => array(
+				'campaignid (int)'
 			)
 		));
+	}
+	
+	public function fetch() {
+		$campaignID = $this->filterNum($_POST['campaignid']);
+		if( !$campaignID ) {
+			return $this->respondWithError('No campaign id supplied');
+		}
+		
+		$agencyID = \OA_Permission::getAgencyId();
+		$campaigns = \OA_Dal::factoryDO('campaigns');
+		$clients = \OA_Dal::factoryDO('clients');
+		$agencies = \OA_Dal::factoryDO('agency');
+
+		// only campaigns for this user
+		$agencies->account_id = \OA_Permission::getAccountId();
+		$clients->joinAdd($agencies);
+		$campaigns->joinAdd($clients);
+
+		$campaigns->selectAdd('ox_campaigns.comments as description_comments');
+		
+		$campaigns->campaignid = $campaignID;
+		
+		$campaigns->find();
+		
+		$out = array();
+		
+		while($campaigns->fetch()) {
+			$o = new \jsonAPI\model\campaign($campaigns->toArray());
+			
+			$out[] = $o;
+		}
+		
+		$campaigns->free();
+
+		return new Response($out);
+		
 	}
 	
 	public function listall() {
@@ -42,6 +81,8 @@ class campaign extends \jsonAPI\controller {
 		
 //		$campaigns->selectAdd();
 //		$campaigns->selectAdd('campaignId');
+
+		$campaigns->selectAdd('ox_campaigns.comments as description_comments');
 
 		// excludes the OpenXMarkert stuff		
 		$campaigns->type = \DataObjects_Campaigns::CAMPAIGN_TYPE_DEFAULT;

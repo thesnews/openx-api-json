@@ -71,6 +71,10 @@ class campaign extends \jsonAPI\model {
 				break;
 		}
 		
+		if( $this->stack['description_comments'] ) {
+			$desc['comments'] = $this->stack['description_comments'];
+		}
+		
 		$this->stack['description'] = $desc;	
 	}
 }
