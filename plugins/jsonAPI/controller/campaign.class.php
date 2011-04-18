@@ -48,8 +48,9 @@ class campaign extends \jsonAPI\controller {
 		$clients->joinAdd($agencies);
 		$campaigns->joinAdd($clients);
 
+		// name collisions with the commennts attrib, so we have to add a
+		// specific add call with the full namespaced table
 		$ns = $GLOBALS['_MAX']['CONF']['table']['prefix'];
-
 		$campaigns->selectAdd($ns.'campaigns.comments as description_comments');
 		
 		$campaigns->campaignid = $campaignID;
@@ -80,11 +81,10 @@ class campaign extends \jsonAPI\controller {
 		$agencies->account_id = \OA_Permission::getAccountId();
 		$clients->joinAdd($agencies);
 		$campaigns->joinAdd($clients);
-		
-//		$campaigns->selectAdd();
-//		$campaigns->selectAdd('campaignId');
-		$ns = $GLOBALS['_MAX']['CONF']['table']['prefix'];
 
+		// name collisions with the commennts attrib, so we have to add a
+		// specific add call with the full namespaced table
+		$ns = $GLOBALS['_MAX']['CONF']['table']['prefix'];
 		$campaigns->selectAdd($ns.'campaigns.comments as description_comments');
 
 		// excludes the OpenXMarkert stuff		
