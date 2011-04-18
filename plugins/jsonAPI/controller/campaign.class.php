@@ -48,7 +48,9 @@ class campaign extends \jsonAPI\controller {
 		$clients->joinAdd($agencies);
 		$campaigns->joinAdd($clients);
 
-		$campaigns->selectAdd('ox_campaigns.comments as description_comments');
+		$ns = $GLOBALS['_MAX']['CONF']['table']['prefix'];
+
+		$campaigns->selectAdd($ns.'campaigns.comments as description_comments');
 		
 		$campaigns->campaignid = $campaignID;
 		
@@ -81,8 +83,9 @@ class campaign extends \jsonAPI\controller {
 		
 //		$campaigns->selectAdd();
 //		$campaigns->selectAdd('campaignId');
+		$ns = $GLOBALS['_MAX']['CONF']['table']['prefix'];
 
-		$campaigns->selectAdd('ox_campaigns.comments as description_comments');
+		$campaigns->selectAdd($ns.'campaigns.comments as description_comments');
 
 		// excludes the OpenXMarkert stuff		
 		$campaigns->type = \DataObjects_Campaigns::CAMPAIGN_TYPE_DEFAULT;
