@@ -122,16 +122,20 @@ class controller {
 	
 	}
 
-	public function filterNum($num, $extra = false) {
+	public function filterNum($num, $extra = 0) {
 		if( is_null($num) ) {
 			return $extra;
 		}
 		
 		if( is_numeric($num) ) {
-			return $num;
+			if( strpos($num, '.') !== false ) {
+				return (float) $num;
+			}
+		
+			return (int) $num;
 		}
 		
-		return preg_replace('/[^0-9\.]/', '', $num);
+		return preg_replace('/[^0-9\.\-]/', '', $num);
 	}
 	
 	public function filterBool($num) {

@@ -3,6 +3,7 @@ namespace jsonAPI\controller;
 use jsonAPI\response as Response;
 
 require_once MAX_PATH.'/lib/OA/Dll/Campaign.php';
+require_once MAX_PATH.'/lib/OA/Dll/CampaignInfo.php';
 require_once MAX_PATH.'/lib/OA/Dll/Advertiser.php';
 require_once MAX_PATH.'/lib/OX/Translation.php';
 require_once MAX_PATH.'/lib/OX/Util/Utils.php';
@@ -125,6 +126,54 @@ class campaign extends \jsonAPI\controller {
 		$campaigns->free();
 
 		return new Response($out);
+	}
+	
+	public function save() {
+		$id = $this->filterNum($_POST['campaignId']);
+		
+		if( !$id ) {
+			return $this->respondWithError('No id found');
+		}
+		
+		// permission check, yo
+		if( !\OA_Permission::hasAccessToObject('campaigns', $id) ) {
+			return $this->respondWithError('No campaign found');
+		}
+
+		$campaignDLL = new \OA_Dll_Campaign;
+		$campaignInfo = new \OA_Dll_CampaignInfo;
+
+		$campaignInfo->campaignId = $id;
+		$campaignInfo->campaignName = $this->filterString($_POST['name']);
+		$campaignInfo->startDate = $this->filterString($_POST['startDate']);
+		$campaignInfo->endDate = $this->filterString($_POST['endDate']);
+		$campaignInfo->impressions = $this->filterNum($_POST['impressions']);
+		$campaignInfo->clicks = $this->filterNum($_POST['clicks']);
+		$campaignInfo->priority = $this->filterNum($_POST['priority']);
+		$campaignInfo->weight = $this->filterNum($_POST['weight']);
+		$campaignInfo->targetImpressions = $this->filterNum(
+			$_POST['targetImpressions']
+		);
+		$campaignInfo->targetClicks = $this->filterNum($_POST['targetClicks']);
+		$campaignInfo->targetConversions = $this->filterNum(
+			$_POST['targetConversions']
+		);
+		$campaignInfo->revenueType = $this->filterNum($_POST['revenueType']);
+		$campaignInfo->capping = $this->filterNum($_POST['capping']);
+		$campaignInfo->sessionCapping = $this->filterNum(
+			$_POST['sessionCapping']
+		);
+		$campaignInfo->block = $this->filterNum($_POST['block']);
+		$campaignInfo->comments = $this->filterString($_POST['comments']);
+		$campaignInfo->viewWindow = $this->filterNum($_POST['viewWindow']);
+        $campaignInfo->clickWindow = $this->filterNum($_POST['clickWindow']);
+        
+		if( $campaignDLL->modify(&$campaignInfo) ) {
+			return new Response(true);
+		}
+		
+		return $this->respondWithError(false);
+		
 	}
 
 }
