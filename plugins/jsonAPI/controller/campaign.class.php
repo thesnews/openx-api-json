@@ -35,6 +35,7 @@ class campaign extends \jsonAPI\controller {
 				'campaignName (string)',
 				'impressions (int)',
 				'clicks (int)',
+				'conversions (int)',
 				'priority (int)',
 				'weight (int)',
 				'targetImpressions (int)',
@@ -167,8 +168,7 @@ class campaign extends \jsonAPI\controller {
 		$campaignInfo->campaignName = $this->filterString(
 			$_POST['campaignName']
 		);
-		$campaignInfo->impressions = $this->filterNum($_POST['impressions']);
-		$campaignInfo->clicks = $this->filterNum($_POST['clicks']);
+
 		$campaignInfo->priority = $this->filterNum($_POST['priority']);
 		$campaignInfo->weight = $this->filterNum($_POST['weight']);
 		$campaignInfo->targetImpressions = $this->filterNum(
@@ -182,6 +182,25 @@ class campaign extends \jsonAPI\controller {
 		$campaignInfo->comments = $this->filterString($_POST['comments']);
 		$campaignInfo->viewWindow = $this->filterNum($_POST['viewWindow']);
         $campaignInfo->clickWindow = $this->filterNum($_POST['clickWindow']);
+
+		$imp = -1;
+		if( $_POST['impressions'] ) {
+			$imp = $this->filterNum($_POST['impressions']);
+		}
+		$campaignInfo->impressions = $imp;
+		
+		$clk = -1;
+		if( $_POST['clicks'] ) {
+			$clk = $this->filterNum($_POST['clicks']);
+		}
+		$campaignInfo->clicks = $clk;
+		
+		$cnv = -1;
+		if( $_POST['conversions'] ) {
+			$cnv = $this->filterNum($_POST['conversions']);
+		}
+		$campaignInfo->conversions = $cnv;
+
 
 		if( $this->filterNum($_POST['block']) ) {
 			$campaignInfo->block = $this->filterNum($_POST['block']);

@@ -9,6 +9,21 @@ class campaign extends \jsonAPI\model {
 			'end' => false
 		);
 
+        $this->stack['campaignId'] = $this->stack['campaignid'];
+        $this->stack['campaignName'] = $this->stack['campaignname'];
+        $this->stack['advertiserId'] = $this->stack['clientid'];
+        $this->stack['startDate'] = $this->stack['activate_time'];
+        $this->stack['endDate'] = $this->stack['expire_time'];
+        $this->stack['impressions'] = $this->stack['views'];
+        $this->stack['targetImpressions'] = $this->stack['target_impression'];
+        $this->stack['targetClicks'] = $this->stack['target_click'];
+        $this->stack['targetConversions']  = $this->stack['target_conversion'];
+        $this->stack['capping'] = $this->stack['capping'];
+        $this->stack['sessionCapping'] = $this->stack['session_capping'];
+        $this->stack['block'] = $this->stack['block'];
+        $this->stack['viewWindow'] = $this->stack['viewwindow'];
+        $this->stack['clickWindow'] = $this->stack['clickwindow'];
+
 		if( $this->stack['activate_time'] ) {
 			$tz = new \DateTimeZone(date_default_timezone_get());
 			$t = new \DateTime($this->stack['activate_time']);
@@ -74,8 +89,105 @@ class campaign extends \jsonAPI\model {
 		if( $this->stack['description_comments'] ) {
 			$desc['comments'] = $this->stack['description_comments'];
 		}
+
+		if( $this->stack['impressions'] > 0 || $this->stack['clicks'] > 0
+			|| $this->stack['conversions'] > 0
+		) {
+        	$tmp = \OA_Dal::factoryDAL('data_intermediate_ad');
+	        $dta = $tmp->getDeliveredByCampaign($this->stack['campaignid']);
+	        $dta = $dta->toArray();
+
+			if( $this->stack['impressions'] != -1 ) {
+	            $this->stack['impressionsRemaining'] = (
+	            	$this->stack['impressions'] - $dta['impressions_delivered']
+	            );
+			} else {
+            	$this->stack['impressionsRemaining'] = '';
+			}
+			
+			if( $this->stack['clicks'] != -1 ) {
+				$this->stack['clicksRemaining'] = (
+					$this->stack['clicks'] - $dta['clicks_delivered']
+				);
+			} else {
+				$this->stack['clicksRemaining'] = '';
+			}
+
+
+			if( $this->stack['conversions'] != -1 ) {
+				$this->stack['conversionsRemaining'] = (
+					$this->stack['conversions'] - $dta['conversions_delivered']
+				);
+			} else {
+				$this->stack['conversionsRemaining'] = '';
+        	}
+        	
+			$this->stack['impressions_delivered'] =
+				$dta['impressions_delivered'];
+			$this->stack['clicks_delivered'] = 
+				$dta['clicks_delivered'];
+			$this->stack['conversions_delivered'] =
+				$dta['conversions_delivered'];
+	    }
+
+		if( $this->stack['status'] ) {
+			$desc['reasons'] = $this->getInactiveString();
+		}
 		
 		$this->stack['description'] = $desc;	
 	}
+	
+	// adapted from www/admin/campaign-edit.php:1108
+	public function getInactiveString() {
+	
+		$prefs = $GLOBALS['_MAX']['PREF'];
+		$raisins = array(); // we bring the funny
+	
+		if( ($this->impressions != -1) && ($this->impressionsRemaining <= 0) ) {
+			$raisins[] = $GLOBALS['strNoMoreImpressions'];
+		}
+		
+		if( ($this->clicks != -1) && ($this->clicksRemainging <= 0) ) {
+			$raisins[] = $GLOBALS['strNoMoreClicks'];
+		}
+		
+		if( ($this->conversions != -1) & ($this->conversionsRemaining <= 0) ) {
+			$raisins[] = $GLOBALS['strNoMoreConversions'];
+		}
+		
+		if( strtotime($this->activate_time) > time() ) {
+			$raisins[] = $GLOBALS['strBeforeActivate'];
+		}
+		
+		if( strtotime($this->expire_time) < time() ) {
+			$raisins[] = $GLOBALS['strAfterExpire'];
+		}
+	
+		if( ($this->priority == 0 || $this->priority == -1)
+			&& $this->weight == 0
+		) {
+			$raisins[] = $GLOBALS['strWeightIsNull'];
+		}
+		
+		if( ($this->priority > 0) 
+			&& ($this->target_value == 0 || $this->target_value == '-') 
+			&& ($this->impressions == -1)
+			&& ($this->clicks == -1)
+			&& ($this->conversions == -1)
+		) {
+			$raisins[] = $GLOBALS['strTargetIsNull'];
+		}
+		
+		return $raisins;
+	}
+	
+	public function __get($k) {
+		if( isset($this->stack[$k]) ) {
+			return $this->stack[$k];
+		}
+		
+		return null;
+	}
+	
 }
 ?>
