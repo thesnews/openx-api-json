@@ -201,6 +201,8 @@ class campaign extends \jsonAPI\controller {
 		$campaignInfo->conversions = $cnv;
 
 		if( $this->filterNum($_POST['advertiserId']) ) {
+			// need to ensure you can't add or move a campaign to another
+			// agency's client
 			$clientid = $this->filterNum($_POST['advertiserId']);
 			if( !\OA_Permission::hasAccessToObject('clients', $clientid) ) {
 				return $this->respondWithError('Cannot use client');
