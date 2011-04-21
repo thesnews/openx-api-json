@@ -212,14 +212,14 @@ class response {
 	public function setData($data) {
 		if( is_array($data) ) {
 			$out = array();
-			foreach( $data as $item ) {
+			foreach( $data as $k => $item ) {
 				if( 
 					is_object($item) 
 					&& is_subclass_of($item, '\\jsonAPI\\model') 
 				) {
-					$out[] = $item->toArray();
+					$out[$k] = $item->toArray();
 				} else {
-					$out[] = $item;
+					$out[$k] = $item;
 				}
 			}
 			
