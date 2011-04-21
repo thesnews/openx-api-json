@@ -28,13 +28,33 @@ class campaign extends \jsonAPI\controller {
 				'offset (int)'
 			),
 			'fetch' => array(
-				'campaignid (int)'
+				'campaignId (int)'
+			),
+			'save' => array(
+				'campaignId (int)',
+				'campaignName (string)',
+				'impressions (int)',
+				'clicks (int)',
+				'priority (int)',
+				'weight (int)',
+				'targetImpressions (int)',
+				'targetClicks (int)',
+				'targetConversions (int)',
+				'revenueType (int)',
+				'comments (string)',
+				'viewWindow (int)',
+				'clickWindow (int)',
+				'block (int)',
+				'capping (int)',
+				'sessionCapping (int)',
+				'startDate (string [YYYY-MM-DD] or empty)',
+				'endDate (string [YYYY-MM-DD] or empty)',
 			)
 		));
 	}
 	
 	public function fetch() {
-		$campaignID = $this->filterNum($_POST['campaignid']);
+		$campaignID = $this->filterNum($_POST['campaignId']);
 		if( !$campaignID ) {
 			return $this->respondWithError('No campaign id supplied');
 		}
@@ -144,9 +164,9 @@ class campaign extends \jsonAPI\controller {
 		$campaignInfo = new \OA_Dll_CampaignInfo;
 
 		$campaignInfo->campaignId = $id;
-		$campaignInfo->campaignName = $this->filterString($_POST['name']);
-		$campaignInfo->startDate = $this->filterString($_POST['startDate']);
-		$campaignInfo->endDate = $this->filterString($_POST['endDate']);
+		$campaignInfo->campaignName = $this->filterString(
+			$_POST['campaignName']
+		);
 		$campaignInfo->impressions = $this->filterNum($_POST['impressions']);
 		$campaignInfo->clicks = $this->filterNum($_POST['clicks']);
 		$campaignInfo->priority = $this->filterNum($_POST['priority']);
@@ -159,16 +179,54 @@ class campaign extends \jsonAPI\controller {
 			$_POST['targetConversions']
 		);
 		$campaignInfo->revenueType = $this->filterNum($_POST['revenueType']);
-		$campaignInfo->capping = $this->filterNum($_POST['capping']);
-		$campaignInfo->sessionCapping = $this->filterNum(
-			$_POST['sessionCapping']
-		);
-		$campaignInfo->block = $this->filterNum($_POST['block']);
 		$campaignInfo->comments = $this->filterString($_POST['comments']);
 		$campaignInfo->viewWindow = $this->filterNum($_POST['viewWindow']);
         $campaignInfo->clickWindow = $this->filterNum($_POST['clickWindow']);
+
+		if( $this->filterNum($_POST['block']) ) {
+			$campaignInfo->block = $this->filterNum($_POST['block']);
+		}
+		if( $this->filterNum($_POST['capping']) ) {
+			$campaignInfo->capping = $this->filterNum($_POST['capping']);
+		}
+		if( $this->filterNum($_POST['sessionCapping']) ) {
+			$campaignInfo->sessionCapping = $this->filterNum(
+				$_POST['sessionCapping']
+			);
+		}		
+		
+		if( $this->filterString($_POST['startDate']) ) {
+			$dt = new \Date($this->filterString($_POST['startDate']));		
+			$campaignInfo->startDate = $dt;
+		} else {
+			$campaignInfo->startDate = new \Date(time());
+		}
+		
+		if( $this->filterString($_POST['endDate']) ) {
+			$dt = new \Date($this->filterString($_POST['endDate']));
+			$campaignInfo->endDate = $dt;
+		} else {
+			$campaignInfo->endDate = '';
+		}
         
 		if( $campaignDLL->modify(&$campaignInfo) ) {
+			/*
+				HACKERY!
+				
+				Ok, this is a hack because the published API is broken. It'd be
+				easy to fix this (a single line) but the goal here is to not modify ANY existing code... so we kludge.
+				
+				In any case, the API doesn't allow you to unset an end date, so
+				we have to hack it.
+			*/
+			
+			if( !$this->filterString($_POST['endDate']) ) {
+				$tmp = \OA_Dal::factoryDO('campaigns');
+				$tmp->campaignid = $id;
+				$tmp->expire_time = '';
+				$tmp->update();
+			}
+			
 			return new Response(true);
 		}
 		
