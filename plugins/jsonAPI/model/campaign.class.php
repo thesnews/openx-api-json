@@ -181,13 +181,5 @@ class campaign extends \jsonAPI\model {
 		return $raisins;
 	}
 	
-	public function __get($k) {
-		if( isset($this->stack[$k]) ) {
-			return $this->stack[$k];
-		}
-		
-		return null;
-	}
-	
 }
 ?>

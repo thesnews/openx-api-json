@@ -21,6 +21,14 @@ class model {
 		return json_encode($this->stack);
 	}
 
+	public function __get($k) {
+		if( isset($this->stack[$k]) ) {
+			return $this->stack[$k];
+		}
+		
+		return null;
+	}
+
 }
 
 ?>

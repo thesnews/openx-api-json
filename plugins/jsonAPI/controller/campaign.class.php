@@ -152,19 +152,18 @@ class campaign extends \jsonAPI\controller {
 	public function save() {
 		$id = $this->filterNum($_POST['campaignId']);
 		
-		if( !$id ) {
-			return $this->respondWithError('No id found');
-		}
-		
 		// permission check, yo
-		if( !\OA_Permission::hasAccessToObject('campaigns', $id) ) {
+		if( $id && !\OA_Permission::hasAccessToObject('campaigns', $id) ) {
 			return $this->respondWithError('No campaign found');
 		}
 
 		$campaignDLL = new \OA_Dll_Campaign;
 		$campaignInfo = new \OA_Dll_CampaignInfo;
-
-		$campaignInfo->campaignId = $id;
+		
+		if( $id ) {
+			$campaignInfo->campaignId = $id;
+		}
+		
 		$campaignInfo->campaignName = $this->filterString(
 			$_POST['campaignName']
 		);
@@ -201,6 +200,14 @@ class campaign extends \jsonAPI\controller {
 		}
 		$campaignInfo->conversions = $cnv;
 
+		if( $this->filterNum($_POST['advertiserId']) ) {
+			$clientid = $this->filterNum($_POST['advertiserId']);
+			if( !\OA_Permission::hasAccessToObject('clients', $clientid) ) {
+				return $this->respondWithError('Cannot use client');
+			}
+			
+			$campaignInfo->advertiserId = $clientid;
+		}
 
 		if( $this->filterNum($_POST['block']) ) {
 			$campaignInfo->block = $this->filterNum($_POST['block']);
@@ -239,14 +246,16 @@ class campaign extends \jsonAPI\controller {
 				we have to hack it.
 			*/
 			
-			if( !$this->filterString($_POST['endDate']) ) {
+			if( $id && !$this->filterString($_POST['endDate']) ) {
 				$tmp = \OA_Dal::factoryDO('campaigns');
 				$tmp->campaignid = $id;
 				$tmp->expire_time = '';
 				$tmp->update();
 			}
 			
-			return new Response(true);
+			return new Response(
+				array('campaignId' => $campaignInfo->campaignId)
+			);
 		}
 		
 		return $this->respondWithError(false);
