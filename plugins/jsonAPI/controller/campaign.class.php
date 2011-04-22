@@ -30,6 +30,9 @@ class campaign extends \jsonAPI\controller {
 			'fetch' => array(
 				'campaignId (int)'
 			),
+			'delete' => array(
+				'campaignId (int)'
+			),
 			'save' => array(
 				'campaignId (int)',
 				'campaignName (string)',
@@ -262,6 +265,24 @@ class campaign extends \jsonAPI\controller {
 		
 		return $this->respondWithError(false);
 		
+	}
+	
+	public function delete() {
+		$id = $this->filterNum($_POST['campaignId']);
+		
+		// permission check, yo
+		if( $id && !\OA_Permission::hasAccessToObject('campaigns', $id) ) {
+			return $this->respondWithError('No campaign found');
+		}
+
+		$campaignDLL = new \OA_Dll_Campaign;
+		if( !$campaignDLL->delete($id) ) {
+			return $this->respondWithError('Unable to delete campaign');
+		}
+
+		return new Response(array(
+			'campaignId' => $id
+		));
 	}
 
 }
