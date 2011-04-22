@@ -167,43 +167,7 @@ class campaign extends \jsonAPI\controller {
 			$campaignInfo->campaignId = $id;
 		}
 		
-		$campaignInfo->campaignName = $this->filterString(
-			$_POST['campaignName']
-		);
-
-		$campaignInfo->priority = $this->filterNum($_POST['priority']);
-		$campaignInfo->weight = $this->filterNum($_POST['weight']);
-		$campaignInfo->targetImpressions = $this->filterNum(
-			$_POST['targetImpressions']
-		);
-		$campaignInfo->targetClicks = $this->filterNum($_POST['targetClicks']);
-		$campaignInfo->targetConversions = $this->filterNum(
-			$_POST['targetConversions']
-		);
-		$campaignInfo->revenueType = $this->filterNum($_POST['revenueType']);
-		$campaignInfo->comments = $this->filterString($_POST['comments']);
-		$campaignInfo->viewWindow = $this->filterNum($_POST['viewWindow']);
-        $campaignInfo->clickWindow = $this->filterNum($_POST['clickWindow']);
-
-		$imp = -1;
-		if( $_POST['impressions'] ) {
-			$imp = $this->filterNum($_POST['impressions']);
-		}
-		$campaignInfo->impressions = $imp;
-		
-		$clk = -1;
-		if( $_POST['clicks'] ) {
-			$clk = $this->filterNum($_POST['clicks']);
-		}
-		$campaignInfo->clicks = $clk;
-		
-		$cnv = -1;
-		if( $_POST['conversions'] ) {
-			$cnv = $this->filterNum($_POST['conversions']);
-		}
-		$campaignInfo->conversions = $cnv;
-
-		if( $this->filterNum($_POST['advertiserId']) ) {
+		if( isset($_POST['advertiserId']) ) {
 			// need to ensure you can't add or move a campaign to another
 			// agency's client
 			$clientid = $this->filterNum($_POST['advertiserId']);
@@ -213,33 +177,116 @@ class campaign extends \jsonAPI\controller {
 			
 			$campaignInfo->advertiserId = $clientid;
 		}
+		
+		if( isset($_POST['priority']) ) {
+			$campaignInfo->priority = $this->filterNum($_POST['priority']);
+		}
 
-		if( $this->filterNum($_POST['block']) ) {
+		if( isset($_POST['campaignName']) ) {
+			$campaignInfo->campaignName = $this->filterString(
+				$_POST['campaignName']
+			);
+		}
+		if( isset($_POST['weight']) ) {
+			$campaignInfo->weight = $this->filterNum($_POST['weight']);
+		}
+		
+		if( isset($_POST['targetImpressions']) ) {
+			$campaignInfo->targetImpressions = $this->filterNum(
+				$_POST['targetImpressions']
+			);
+		}
+		
+		if( isset($_POST['targetClicks']) ) {
+			$campaignInfo->targetClicks = $this->filterNum(
+				$_POST['targetClicks']
+			);
+		}
+		
+		if( isset($_POST['targetConversions']) ) {
+			$campaignInfo->targetConversions = $this->filterNum(
+				$_POST['targetConversions']
+			);
+		}
+		
+		if( isset($_POST['revenueType']) ) {
+			$campaignInfo->revenueType = $this->filterNum(
+				$_POST['revenueType']
+			);
+		}
+		
+		if( isset($_POST['comments']) ) {
+			$campaignInfo->comments = $this->filterString($_POST['comments']);
+		}
+		
+		if( isset($_POST['viewWindow']) ) {
+			$campaignInfo->viewWindow = $this->filterNum($_POST['viewWindow']);
+		}
+		
+		if( isset($_POST['clickWindow']) ) {
+	        $campaignInfo->clickWindow = $this->filterNum(
+	        	$_POST['clickWindow']
+	        );
+	    }
+		
+		if( isset($_POST['impressions']) ) {
+			$imp = -1;
+			if( $_POST['impressions'] ) {
+				$imp = $this->filterNum($_POST['impressions']);
+			}
+			$campaignInfo->impressions = $imp;
+		}
+		
+		if( isset($_POST['clicks']) ) {
+			$clk = -1;
+			if( $_POST['clicks'] ) {
+				$clk = $this->filterNum($_POST['clicks']);
+			}
+			$campaignInfo->clicks = $clk;
+		}
+		
+		if( isset($_POST['conversions']) ) {
+			$cnv = -1;
+			if( $_POST['conversions'] ) {
+				$cnv = $this->filterNum($_POST['conversions']);
+			}
+			$campaignInfo->conversions = $cnv;
+		}
+		
+		if( isset($_POST['block']) && $this->filterNum($_POST['block']) ) {
 			$campaignInfo->block = $this->filterNum($_POST['block']);
 		}
-		if( $this->filterNum($_POST['capping']) ) {
+		
+		if( isset($_POST['capping']) && $this->filterNum($_POST['capping'])) {
 			$campaignInfo->capping = $this->filterNum($_POST['capping']);
 		}
-		if( $this->filterNum($_POST['sessionCapping']) ) {
+		
+		if( isset($_POST['sessionCapping'])
+			&& $this->filterNum($_POST['sessionCapping']) ) {
 			$campaignInfo->sessionCapping = $this->filterNum(
 				$_POST['sessionCapping']
 			);
 		}		
 		
-		if( $this->filterString($_POST['startDate']) ) {
-			$dt = new \Date($this->filterString($_POST['startDate']));		
-			$campaignInfo->startDate = $dt;
-		} else {
-			$campaignInfo->startDate = new \Date(time());
+
+		if( isset($_POST['startDate']) ) {
+			if( $this->filterString($_POST['startDate']) ) {
+				$dt = new \Date($this->filterString($_POST['startDate']));		
+				$campaignInfo->startDate = $dt;
+			} else {
+				$campaignInfo->startDate = new \Date(time());
+			}
 		}
 		
-		if( $this->filterString($_POST['endDate']) ) {
-			$dt = new \Date($this->filterString($_POST['endDate']));
-			$campaignInfo->endDate = $dt;
-		} else {
-			$campaignInfo->endDate = '';
+		if( isset($_POST['endDate']) ) {
+			if( $this->filterString($_POST['endDate']) ) {
+				$dt = new \Date($this->filterString($_POST['endDate']));
+				$campaignInfo->endDate = $dt;
+			} else {
+				$campaignInfo->endDate = '';
+			}
 		}
-        
+
 		if( $campaignDLL->modify(&$campaignInfo) ) {
 			/*
 				HACKERY!
@@ -251,7 +298,9 @@ class campaign extends \jsonAPI\controller {
 				we have to hack it.
 			*/
 			
-			if( $id && !$this->filterString($_POST['endDate']) ) {
+			if( $id && isset($_POST['endDate'])
+				&& !$this->filterString($_POST['endDate'])
+			) {
 				$tmp = \OA_Dal::factoryDO('campaigns');
 				$tmp->campaignid = $id;
 				$tmp->expire_time = '';
