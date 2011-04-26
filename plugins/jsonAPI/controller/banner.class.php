@@ -127,11 +127,11 @@ class banner extends \jsonAPI\controller {
 			$bannerInfo->bannerId = $id;
 		}
 		
-//		if( isset($_POST['bannerName']) ) {
+		if( isset($_POST['bannerName']) ) {
 			$bannerInfo->bannerName = $this->filterString(
 				$_POST['bannerName']
 			);
-//		}
+		}
 		
 		if( isset($_POST['url']) ) {
 			$bannerInfo->url = $this->filterString($_POST['url']);
@@ -165,6 +165,20 @@ class banner extends \jsonAPI\controller {
 		
 		if( isset($_POST['comments']) ) {
 			$bannerInfo->comments = $this->filterString($_POST['comments']);
+		}
+		
+		if( isset($_POST['fileData']) && is_array($_POST['fileData']) ) {
+			
+			$fileData = array(
+				'filename' => $this->filterString(
+					$_POST['fileData']['filename']
+				),
+				'content' => base64_decode($_POST['fileData']['content']),
+				'editswf' => ($_POST['editswf']) ? true : false
+			);
+			
+			$bannerInfo->storageType = 'web';
+			$bannerInfo->aImage = $fileData;
 		}
 		
 		if( $bannerDLL->modify(&$bannerInfo) ) {
