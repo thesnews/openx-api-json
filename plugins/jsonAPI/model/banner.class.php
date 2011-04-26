@@ -25,6 +25,13 @@ class banner extends \jsonAPI\model {
 			$this->stack["status"] == \OA_ENTITY_STATUS_RUNNING
 		);
 
+		$this->stack['weight'] = $this->stack['banner_weight'];
+		$this->stack['comments'] = $this->stack['banner_comments'];
+
+		$p = $GLOBALS['_MAX']['CONF']['webpath']['images'];
+		$this->stack['filepath'] = $p."/".$this->stack['filename'];
+
+
 		// mostly borrowed from www/admin/lib-size.inc.php:35
         if( isset($this->stack['width']) && isset($this->stack['height']) ) {
             $width = $this->stack['width'];
