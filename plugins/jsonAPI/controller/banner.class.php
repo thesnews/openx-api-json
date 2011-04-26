@@ -5,6 +5,8 @@ use jsonAPI\response as Response;
 require_once MAX_PATH.'/lib/OA/Dll/Advertiser.php';
 require_once MAX_PATH.'/lib/OA/Dll/Campaign.php';
 require_once MAX_PATH.'/lib/OA/Dll/Banner.php';
+require_once MAX_PATH.'/lib/OA/Dll/Publisher.php';
+require_once MAX_PATH.'/lib/OA/Dll/Zone.php';
 
 require_once MAX_PATH.'/plugins/jsonAPI/model/banner.class.php';
 
@@ -182,7 +184,32 @@ class banner extends \jsonAPI\controller {
 		}
 		
 		if( $bannerDLL->modify(&$bannerInfo) ) {
+		
+			// make sure the banner is linked to the zone
+			$agencies = \OA_Dal::factoryDO('agency');
+			$publishers = \OA_Dal::factoryDO('affiliates');
+			$zones = \OA_Dal::factoryDO('zones');
 			
+			$agencies->account_id = \OA_Permission::getAccountId();
+			$publishers->joinAdd($agencies);
+			$zones->joinAdd($publishers);
+
+			// fetch banner data again to make sure the size is correct
+			$bannerData = false;
+			$bannerDLL->getBanner($bannerInfo->bannerId, &$bannerData);
+			
+			$zones->width = $bannerData->width;
+			$zones->height = $bannerData->height;
+			
+			$zones->find();
+			if( $zones->fetch() ) {
+				$zoneData = $zones->toArray();
+				if( $zoneData['zoneid'] ) {
+					$z = new \OA_Dll_Zone;
+					$z->linkBanner($zoneData['zoneid'], $bannerInfo->bannerId);
+				}
+			}
+
 			return new Response(array('bannerId' => $bannerInfo->bannerId));
 		}
 		
