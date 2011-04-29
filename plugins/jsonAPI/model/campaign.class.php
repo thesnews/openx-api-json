@@ -1,5 +1,6 @@
 <?php
 namespace jsonAPI\model;
+require_once MAX_PATH.'/lib/OA/Dll/Campaign.php';
 
 class campaign extends \jsonAPI\model {
 	
@@ -132,6 +133,24 @@ class campaign extends \jsonAPI\model {
 
 		if( $this->stack['status'] ) {
 			$desc['reasons'] = $this->getInactiveString();
+		}
+
+		$this->stack['active'] = ($this->stack['status']) ? false : true;
+
+		$campDll = new \OA_Dll_Campaign;
+		$stats = array();
+		
+		$desc['statistics'] = array();
+		
+		$campDll->getCampaignPublisherStatistics(
+			$this->stack['campaignid'], 
+			new \Date($this->stack['activate_time']), new \Date, true, &$stats
+		);
+		if( $stats ) {
+			$stats->find();
+			$stats->fetch();
+			
+			$desc['statistics'] = $stats->toArray();
 		}
 		
 		$this->stack['description'] = $desc;	

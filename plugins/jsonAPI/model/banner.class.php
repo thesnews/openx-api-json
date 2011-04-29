@@ -2,6 +2,7 @@
 namespace jsonAPI\model;
 
 require_once MAX_PATH.'/lib/max/resources/res-iab.inc.php';
+require_once MAX_PATH.'/lib/OA/Dll/Banner.php';
 
 class banner extends \jsonAPI\model {
 	public static $IABSizes;
@@ -59,7 +60,20 @@ class banner extends \jsonAPI\model {
             
         }
 
+		$bannerDll = new \OA_Dll_Banner;
+		$stats = array();
+		
+		$bannerDll->getBannerPublisherStatistics(
+			$this->stack['bannerid'], new \Date($this->stack['activate_time']),
+			new \Date, true, &$stats
+		);
+		$stats->find();
+		$stats->fetch();
+		
+		$desc['statistics'] = $stats->toArray();
+
 		$this->stack['description'] = $desc;
+		
 	}
 
 }
