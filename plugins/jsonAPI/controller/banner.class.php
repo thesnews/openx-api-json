@@ -183,6 +183,13 @@ class banner extends \jsonAPI\controller {
 			$bannerInfo->aImage = $fileData;
 		}
 		
+		if( isset($_POST['htmlTemplate']) ) {
+			$code = $_POST['htmlTemplate'];
+			
+			$bannerInfo->storageType = 'html';
+			$bannerInfo->htmlTemplate = $code;
+		}
+		
 		if( $bannerDLL->modify(&$bannerInfo) ) {
 		
 			// make sure the banner is linked to the zone
