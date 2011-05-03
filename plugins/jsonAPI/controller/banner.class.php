@@ -134,6 +134,17 @@ class banner extends \jsonAPI\controller {
 				$_POST['bannerName']
 			);
 		}
+
+		if( isset($_POST['campaignId']) ) {
+			// need to ensure you can't add or move a banner to another
+			// agency's campaign
+			$campaignId = $this->filterNum($_POST['campaignId']);
+			if( !\OA_Permission::hasAccessToObject('campaigns', $campaignId) ) {
+				return $this->respondWithError('Cannot use client');
+			}
+			
+			$bannerInfo->campaignId = $campaignId;
+		}
 		
 		if( isset($_POST['url']) ) {
 			$bannerInfo->url = $this->filterString($_POST['url']);
