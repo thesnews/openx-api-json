@@ -22,6 +22,9 @@ class banner extends \jsonAPI\model {
         
         $this->stack['bannername'] = $this->stack['description'];
 
+		$this->stack['campaignstatus'] = $this->stack['status'];
+		$this->stack['status'] = $this->stack['banner_status'];
+
 		$this->stack['active'] = (
 			$this->stack["status"] == \OA_ENTITY_STATUS_RUNNING
 		);

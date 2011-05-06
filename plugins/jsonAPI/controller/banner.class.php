@@ -56,10 +56,20 @@ class banner extends \jsonAPI\controller {
 		$campaigns->joinAdd($clients);
 		$banners->joinAdd($campaigns);
 
+		$ns = $GLOBALS['_MAX']['CONF']['table']['prefix'];
+		$banners->selectAdd($ns.'banners.comments as banner_comments');
+		$banners->selectAdd($ns.'banners.weight as banner_weight');
+		$banners->selectAdd($ns.'banners.status as banner_status');
+
+
 		if( $_POST['status'] == 'active' ) {
-			$banners->status = \OA_ENTITY_STATUS_RUNNING;
+			$banners->whereAdd(
+				$ns.'banners.status = '.\OA_ENTITY_STATUS_RUNNING
+			);
 		} elseif( $_POST['status'] == 'inactive' ) {
-			$banners->whereAdd('status != '.\OA_ENTITY_STATUS_RUNNING);
+			$banners->whereAdd(
+				$ns.'banners.status != '.\OA_ENTITY_STATUS_RUNNING
+			);
 		}
 		
 		$order = 'description asc';
@@ -125,7 +135,8 @@ class banner extends \jsonAPI\controller {
 		$ns = $GLOBALS['_MAX']['CONF']['table']['prefix'];
 		$banners->selectAdd($ns.'banners.comments as banner_comments');
 		$banners->selectAdd($ns.'banners.weight as banner_weight');
-		
+		$banners->selectAdd($ns.'banners.status as banner_status');
+
 		$banners->find();
 		
 		$out = array();
