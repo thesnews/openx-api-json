@@ -233,6 +233,24 @@ class banner extends \jsonAPI\controller {
 		
 		return $this->respondWithError('Unable to save banner');
 	}
+	
+	public function delete() {
+		$id = $this->filterNum($_POST['bannerId']);
+		
+		// permission check, yo
+		if( $id && !\OA_Permission::hasAccessToObject('banners', $id) ) {
+			return $this->respondWithError('No banner found');
+		}
+
+		$bannerDLL = new \OA_Dll_Banner;
+		if( !$bannerDLL->delete($id) ) {
+			return $this->respondWithError('Unable to delete banner');
+		}
+
+		return new Response(array(
+			'bannerId' => $id
+		));
+	}
 
 }
 
