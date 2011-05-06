@@ -55,7 +55,35 @@ class banner extends \jsonAPI\controller {
 
 		$campaigns->joinAdd($clients);
 		$banners->joinAdd($campaigns);
+
+		if( $_POST['status'] == 'active' ) {
+			$banners->status = \OA_ENTITY_STATUS_RUNNING;
+		} elseif( $_POST['status'] == 'inactive' ) {
+			$banners->whereAdd('status != '.\OA_ENTITY_STATUS_RUNNING);
+		}
 		
+		$order = 'description asc';
+		
+		switch( $_POST['sort'] ) {
+			case 'start':
+				$order = 'activate_time asc';
+				break;
+			case 'end':
+				$order = 'expire_time asc';
+				break;
+			case 'client':
+				$order = 'clientname asc';
+				break;
+			case 'size':
+				$order = 'width desc, height desc';
+				break;
+			case 'campaign':
+				$order = 'campaignname asc';
+				break;
+		}
+		
+		$banners->orderBy($order);
+
 		$banners->find();
 		
 		$out = array();
