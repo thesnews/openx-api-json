@@ -3,6 +3,7 @@ namespace jsonAPI\controller;
 use jsonAPI\response as Response;
 
 require_once MAX_PATH.'/lib/OA/Dll/Campaign.php';
+require_once MAX_PATH.'/lib/OA/Dll/Banner.php';
 require_once MAX_PATH.'/lib/OA/Dll/CampaignInfo.php';
 require_once MAX_PATH.'/lib/OA/Dll/Advertiser.php';
 require_once MAX_PATH.'/lib/OX/Translation.php';
@@ -329,6 +330,27 @@ class campaign extends \jsonAPI\controller {
 			return $this->respondWithError('Unable to delete campaign');
 		}
 
+		return new Response(array(
+			'campaignId' => $id
+		));
+	}
+
+	public function deactivate() {
+		$id = $this->filterNum($_POST['campaignId']);
+		
+		// permission check, yo
+		if( $id && !\OA_Permission::hasAccessToObject('campaigns', $id) ) {
+			return $this->respondWithError('No campaign found');
+		}
+
+		$bannerDLL = new \OA_Dll_Banner;
+
+		$banners = \OA_Dal::factoryDO('banners');
+		$banners->status = \OA_ENTITY_STATUS_PAUSED;
+		$banners->whereAdd('campaignid = ' . $id);
+		
+		$banners->update(\DB_DATAOBJECT_WHEREADD_ONLY);
+		
 		return new Response(array(
 			'campaignId' => $id
 		));
