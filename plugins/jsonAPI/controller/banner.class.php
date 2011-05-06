@@ -219,6 +219,14 @@ class banner extends \jsonAPI\controller {
 			$bannerInfo->comments = $this->filterString($_POST['comments']);
 		}
 		
+		if( isset($_POST['status']) ) {
+			if( $_POST['status'] == \OA_ENTITY_STATUS_RUNNING ) {
+				$bannerInfo->status = \OA_ENTITY_STATUS_RUNNING;
+			} else {
+				$bannerInfo->status = 1;
+			}
+		}
+		
 		if( isset($_POST['fileData']) && is_array($_POST['fileData']) ) {
 			
 			$fileData = array(
