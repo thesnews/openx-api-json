@@ -16,8 +16,11 @@ class banner extends \jsonAPI\model {
         $this->stack['campaignId'] = $this->stack['campaignid'];
         $this->stack['bannerId'] = $this->stack['bannerid'];
         $this->stack['bannerText'] = $this->stack['bannertext'];
-        $this->stack['sessionCapping'] = $this->stack['session_capping'];
-        $this->stack['block'] = $this->stack['block'];
+		$this->stack['capping'] = $this->stack['banner_capping'];
+		$this->stack['sessionCapping'] = $this->stack['banner_session_capping'];
+		$this->stack['session_capping'] =
+			$this->stack['banner_session_capping'];
+        $this->stack['block'] = $this->stack['banner_block'];
         $this->stack['alt'] = $this->stack['alt'];
         
         $this->stack['bannername'] = $this->stack['description'];

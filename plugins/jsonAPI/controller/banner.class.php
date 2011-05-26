@@ -136,6 +136,9 @@ class banner extends \jsonAPI\controller {
 		$banners->selectAdd($ns.'banners.comments as banner_comments');
 		$banners->selectAdd($ns.'banners.weight as banner_weight');
 		$banners->selectAdd($ns.'banners.status as banner_status');
+		$banners->selectAdd($ns.'banners.block as banner_block');
+		$banners->selectAdd($ns.'banners.capping as banner_capping');
+		$banners->selectAdd($ns.'banners.session_capping as banner_session_capping');
 
 		$banners->find();
 		
@@ -215,6 +218,21 @@ class banner extends \jsonAPI\controller {
 			$bannerInfo->weight = $this->filterNum($_POST['weight']);
 		}
 		
+		if( isset($_POST['block']) && $this->filterNum($_POST['block']) ) {
+			$bannerInfo->block = $this->filterNum($_POST['block']);
+		}
+		
+		if( isset($_POST['capping']) && $this->filterNum($_POST['capping'])) {
+			$bannerInfo->capping = $this->filterNum($_POST['capping']);
+		}
+		
+		if( isset($_POST['sessionCapping'])
+			&& $this->filterNum($_POST['sessionCapping']) ) {
+			$bannerInfo->sessionCapping = $this->filterNum(
+				$_POST['sessionCapping']
+			);
+		}		
+
 		if( isset($_POST['comments']) ) {
 			$bannerInfo->comments = $this->filterString($_POST['comments']);
 		}
