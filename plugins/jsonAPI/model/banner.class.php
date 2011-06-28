@@ -80,6 +80,13 @@ class banner extends \jsonAPI\model {
 
 		$this->stack['description'] = $desc;
 		
+		$targetingData = array();
+		$bannerDll->getBannerTargeting(
+			$this->stack['bannerid'], &$targetingData
+		);
+		
+		$this->stack['targeting'] = $targetingData;
+		
 	}
 
 }

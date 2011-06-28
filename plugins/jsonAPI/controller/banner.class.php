@@ -7,6 +7,8 @@ require_once MAX_PATH.'/lib/OA/Dll/Campaign.php';
 require_once MAX_PATH.'/lib/OA/Dll/Banner.php';
 require_once MAX_PATH.'/lib/OA/Dll/Publisher.php';
 require_once MAX_PATH.'/lib/OA/Dll/Zone.php';
+require_once LIB_PATH.'/Plugin/Component.php';
+require_once MAX_PATH.'/lib/OX/Util/Utils.php';
 
 require_once MAX_PATH.'/plugins/jsonAPI/model/banner.class.php';
 
@@ -266,6 +268,7 @@ class banner extends \jsonAPI\controller {
 			$bannerInfo->htmlTemplate = $code;
 		}
 		
+		
 		if( $bannerDLL->modify(&$bannerInfo) ) {
 		
 			// make sure the banner is linked to the zone
@@ -292,6 +295,32 @@ class banner extends \jsonAPI\controller {
 					$z->linkBanner($zoneData['zoneid'], $bannerInfo->bannerId);
 				}
 			}
+			
+			// set the targeting
+			if( isset($_POST['targeting']) && is_array($_POST['targeting']) ) {
+				$targeting = $_POST['targeting'];
+				
+ 
+ 				// have to convert the targeting array to an object
+ 				foreach( $targeting as $order => $data ) {
+ 					$ti = new \OA_Dll_TargetingInfo;
+ 					$ti->logical = $data['logical'];
+ 					$ti->type = $data['type'];
+ 					$ti->comparison = $data['comparison'];
+ 					$ti->data = $data['value'];
+ 					
+ 					$targeting[$order] = $ti;
+ 				}
+
+				$ret = $bannerDLL->setBannerTargeting(
+					$bannerInfo->bannerId, &$targeting
+				);
+
+				if( !$ret ) {
+					error_log('error setting targeting');
+				}
+			}
+
 
 			return new Response(array('bannerId' => $bannerInfo->bannerId));
 		}
