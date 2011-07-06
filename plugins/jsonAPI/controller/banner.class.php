@@ -311,6 +311,9 @@ class banner extends \jsonAPI\controller {
  					
  					$targeting[$order] = $ti;
  				}
+ 				
+ 				ksort($targeting);
+ 				$targeting = array_values($targeting);
 
 				$ret = $bannerDLL->setBannerTargeting(
 					$bannerInfo->bannerId, &$targeting
@@ -319,6 +322,11 @@ class banner extends \jsonAPI\controller {
 				if( !$ret ) {
 					error_log('error setting targeting');
 				}
+			} else {
+				$t = array();
+				$bannerDLL->setBannerTargeting(
+					$bannerInfo->bannerId, $t
+				);
 			}
 
 
