@@ -83,6 +83,26 @@ class targeting extends \jsonAPI\controller {
 
 	}
 
+	public function listDMAs() {
+        $file = \MAX_PATH
+        	.$GLOBALS['_MAX']['CONF']['pluginPaths']['plugins']
+        	.'/deliveryLimitations/Geo/Dma.res.inc.php';
+
+        if( is_readable($file) ) {
+			include $file;
+
+            $out = array();
+            foreach( $res as $cc => $label ) {
+            	$out[] = array('code'=> $cc, 'label' => $label);
+            }
+
+			return new Response($out);
+        }
+
+        return new Response(array());
+
+	}
+
 	public function listChannels() {
 		$agencyID = \OA_Permission::getAgencyId();
 
