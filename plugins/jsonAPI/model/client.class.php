@@ -2,8 +2,11 @@
 namespace jsonAPI\model;
 
 class client extends \jsonAPI\model {
-	
+
 	public function __init() {
+
+		$this->stack['contact'] = $this->stack['_contact'];
+		$this->stack['email'] = $this->stack['_email'];
 
         $this->stack['advertiserName'] = $this->stack['clientname'];
         $this->stack['agencyName'] = $this->stack['name'];
@@ -14,6 +17,6 @@ class client extends \jsonAPI\model {
         $this->stack['accountId'] = $this->stack['account_id'];
 
 	}
-	
+
 }
 ?>

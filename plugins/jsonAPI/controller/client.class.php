@@ -26,11 +26,11 @@ class client extends \jsonAPI\controller {
 			)
 		));
 	}
-	
+
 	public function stats() {
-	
+
 	}
-	
+
 	public function listall() {
 		$agencyID = \OA_Permission::getAgencyId();
 		$clients = \OA_Dal::factoryDO('clients');
@@ -38,17 +38,36 @@ class client extends \jsonAPI\controller {
 
 		$agencies->account_id = \OA_Permission::getAccountId();
 		$clients->joinAdd($agencies);
-		
+
 		// omit the market client
 		$clients->type = \DataObjects_Clients::ADVERTISER_TYPE_DEFAULT;
 
+		// name collisions with the commennts attrib, so we have to add a
+		// specific add call with the full namespaced table
+		$ns = $GLOBALS['_MAX']['CONF']['table']['prefix'];
+		$clients->selectAdd($ns.'clients.contact as _contact');
+		$clients->selectAdd($ns.'clients.email as _email');
+
+		$order = 'clientname asc';
+
+		switch( $_POST['sort'] ) {
+			case 'contact':
+				$order = '_contact asc';
+				break;
+			case 'email':
+				$order = '_email asc';
+				break;
+		}
+
+		$clients->orderBy($order);
+
 		$clients->find();
-		
+
 		$out = array();
 		while( $clients->fetch() ) {
 			$out[] = new \jsonAPI\model\client($clients->toArray());
 		}
-		
+
 		return new Response($out);
 	}
 
