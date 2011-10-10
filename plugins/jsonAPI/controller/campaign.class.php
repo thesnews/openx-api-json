@@ -138,6 +138,18 @@ class campaign extends \jsonAPI\controller {
 
 		$campaigns->orderBy($order);
 
+ 		if( $_POST['filter'] ) {
+			$q = $_POST['filter'];
+			$campaigns->whereAdd(
+				'('
+					.$ns."campaigns.campaignname like '%".$campaigns->escape($q)
+						."%' or "
+					.$ns."campaigns.comments like '%".$campaigns->escape($q)
+						."%'"
+				.')'
+			);
+		}
+
 		$campaigns->find();
 
 		$out = array();

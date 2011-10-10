@@ -41,7 +41,7 @@ class banner extends \jsonAPI\controller {
 			)
 		));
 	}
-	
+
 	public function listall() {
 		$agencyID = \OA_Permission::getAgencyId();
 
@@ -49,7 +49,7 @@ class banner extends \jsonAPI\controller {
 		$clients = \OA_Dal::factoryDO('clients');
 		$agencies = \OA_Dal::factoryDO('agency');
 		$banners = \OA_Dal::factoryDO('banners');
-		
+
 		$agencies->account_id = \OA_Permission::getAccountId();
 		$clients->joinAdd($agencies);
 
@@ -73,9 +73,9 @@ class banner extends \jsonAPI\controller {
 				$ns.'banners.status != '.\OA_ENTITY_STATUS_RUNNING
 			);
 		}
-		
+
 		$order = 'description asc';
-		
+
 		switch( $_POST['sort'] ) {
 			case 'start':
 				$order = 'activate_time asc';
@@ -93,28 +93,46 @@ class banner extends \jsonAPI\controller {
 				$order = 'campaignname asc';
 				break;
 		}
-		
+
 		$banners->orderBy($order);
 
+		if( $_POST['filter'] ) {
+			$q = $_POST['filter'];
+			$banners->whereAdd(
+				'('
+					.$ns."banners.filename like '%".$banners->escape($q)
+						."%' or "
+					.$ns."banners.alt like '%".$banners->escape($q)."%' or "
+					.$ns."banners.statustext like '%".$banners->escape($q)
+						."%' or "
+					.$ns."banners.description like '%".$banners->escape($q)
+						."%' or "
+					.$ns."banners.comments like '%".$banners->escape($q)
+						."%' or "
+					.$ns."banners.keyword like '%".$banners->escape($q)."%'"
+				.')'
+			);
+		}
+
 		$banners->find();
-		
+
 		$out = array();
-		
+
 		while( $banners->fetch() ) {
 			$out[] = new \jsonAPI\model\banner($banners->toArray());
 		}
-				
+
 		return new Response($out);
 
 	}
-	
+
 	public function fetch() {
 		$bannerId = $this->filterNum($_POST['bannerId']);
 		if( !$bannerId ) {
 			return $this->respondWithError('No banner id supplied');
 		}
 
-		if( $bannerId 
+		if( $bannerId
 			&& !\OA_Permission::hasAccessToObject('banners', $bannerId) ) {
 			return $this->respondWithError('No banner found');
 		}
@@ -123,7 +141,7 @@ class banner extends \jsonAPI\controller {
 		$clients = \OA_Dal::factoryDO('clients');
 		$agencies = \OA_Dal::factoryDO('agency');
 		$banners = \OA_Dal::factoryDO('banners');
-		
+
 		$agencies->account_id = \OA_Permission::getAccountId();
 		$clients->joinAdd($agencies);
 
@@ -131,7 +149,7 @@ class banner extends \jsonAPI\controller {
 
 		$campaigns->joinAdd($clients);
 		$banners->joinAdd($campaigns);
-		
+
 		$banners->bannerid = $bannerId;
 
 		$ns = $GLOBALS['_MAX']['CONF']['table']['prefix'];
@@ -143,36 +161,36 @@ class banner extends \jsonAPI\controller {
 		$banners->selectAdd($ns.'banners.session_capping as banner_session_capping');
 
 		$banners->find();
-		
+
 		$out = array();
-		
+
 		while($banners->fetch()) {
 			$o = new \jsonAPI\model\banner($banners->toArray());
-			
+
 			$out[] = $o;
 		}
-		
+
 		$banners->free();
 
 		return new Response($out);
-		
+
 	}
-	
+
 	public function save() {
 		$id = $this->filterNum($_POST['bannerId']);
-		
+
 		// permission check, yo
 		if( $id && !\OA_Permission::hasAccessToObject('banners', $id) ) {
 			return $this->respondWithError('No banner found');
 		}
-		
+
 		$bannerDLL = new \OA_Dll_Banner;
 		$bannerInfo = new \OA_Dll_BannerInfo;
-		
+
 		if( $id ) {
 			$bannerInfo->bannerId = $id;
 		}
-		
+
 		if( isset($_POST['bannerName']) ) {
 			$bannerInfo->bannerName = $this->filterString(
 				$_POST['bannerName']
@@ -186,32 +204,32 @@ class banner extends \jsonAPI\controller {
 			if( !\OA_Permission::hasAccessToObject('campaigns', $campaignId) ) {
 				return $this->respondWithError('Cannot use client');
 			}
-			
+
 			$bannerInfo->campaignId = $campaignId;
 		}
-		
+
 		if( isset($_POST['url']) ) {
 			$bannerInfo->url = $this->filterString($_POST['url']);
 		}
-		
+
 		if( isset($_POST['alt']) ) {
 			$bannerInfo->alt = $this->filterString($_POST['alt']);
 		}
-		
+
 		if( isset($_POST['keyword']) ) {
 			$bannerInfo->keyword = $this->filterString($_POST['keyword']);
 		}
-		
+
 		if( isset($_POST['target']) && $this->filterString($_POST['target']) ) {
 			$bannerInfo->target = $this->filterString($_POST['target']);
 		} else {
 			$bannerInfo->target = '';
 		}
-		
+
 		if( isset($_POST['width']) && $this->filterNum($_POST['width']) ) {
 			$bannerInfo->width = $this->filterNum($_POST['width']);
 		}
-		
+
 		if( isset($_POST['height']) && $this->filterNum($_POST['height']) ) {
 			$bannerInfo->height = $this->filterNum($_POST['height']);
 		}
@@ -219,26 +237,26 @@ class banner extends \jsonAPI\controller {
 		if( isset($_POST['weight']) ) {
 			$bannerInfo->weight = $this->filterNum($_POST['weight']);
 		}
-		
+
 		if( isset($_POST['block']) && $this->filterNum($_POST['block']) ) {
 			$bannerInfo->block = $this->filterNum($_POST['block']);
 		}
-		
+
 		if( isset($_POST['capping']) && $this->filterNum($_POST['capping'])) {
 			$bannerInfo->capping = $this->filterNum($_POST['capping']);
 		}
-		
+
 		if( isset($_POST['sessionCapping'])
 			&& $this->filterNum($_POST['sessionCapping']) ) {
 			$bannerInfo->sessionCapping = $this->filterNum(
 				$_POST['sessionCapping']
 			);
-		}		
+		}
 
 		if( isset($_POST['comments']) ) {
 			$bannerInfo->comments = $this->filterString($_POST['comments']);
 		}
-		
+
 		if( isset($_POST['status']) ) {
 			if( $_POST['status'] == \OA_ENTITY_STATUS_RUNNING ) {
 				$bannerInfo->status = \OA_ENTITY_STATUS_RUNNING;
@@ -246,9 +264,9 @@ class banner extends \jsonAPI\controller {
 				$bannerInfo->status = 1;
 			}
 		}
-		
+
 		if( isset($_POST['fileData']) && is_array($_POST['fileData']) ) {
-			
+
 			$fileData = array(
 				'filename' => $this->filterString(
 					$_POST['fileData']['filename']
@@ -256,26 +274,26 @@ class banner extends \jsonAPI\controller {
 				'content' => base64_decode($_POST['fileData']['content']),
 				'editswf' => ($_POST['editswf']) ? true : false
 			);
-			
+
 			$bannerInfo->storageType = 'web';
 			$bannerInfo->aImage = $fileData;
 		}
-		
+
 		if( isset($_POST['htmlTemplate']) ) {
 			$code = $_POST['htmlTemplate'];
-			
+
 			$bannerInfo->storageType = 'html';
 			$bannerInfo->htmlTemplate = $code;
 		}
-		
-		
+
+
 		if( $bannerDLL->modify(&$bannerInfo) ) {
-		
+
 			// make sure the banner is linked to the zone
 			$agencies = \OA_Dal::factoryDO('agency');
 			$publishers = \OA_Dal::factoryDO('affiliates');
 			$zones = \OA_Dal::factoryDO('zones');
-			
+
 			$agencies->account_id = \OA_Permission::getAccountId();
 			$publishers->joinAdd($agencies);
 			$zones->joinAdd($publishers);
@@ -283,10 +301,10 @@ class banner extends \jsonAPI\controller {
 			// fetch banner data again to make sure the size is correct
 			$bannerData = false;
 			$bannerDLL->getBanner($bannerInfo->bannerId, &$bannerData);
-			
+
 			$zones->width = $bannerData->width;
 			$zones->height = $bannerData->height;
-			
+
 			$zones->find();
 			if( $zones->fetch() ) {
 				$zoneData = $zones->toArray();
@@ -295,12 +313,12 @@ class banner extends \jsonAPI\controller {
 					$z->linkBanner($zoneData['zoneid'], $bannerInfo->bannerId);
 				}
 			}
-			
+
 			// set the targeting
 			if( isset($_POST['targeting']) && is_array($_POST['targeting']) ) {
 				$targeting = $_POST['targeting'];
-				
- 
+
+
  				// have to convert the targeting array to an object
  				foreach( $targeting as $order => $data ) {
  					$ti = new \OA_Dll_TargetingInfo;
@@ -308,10 +326,10 @@ class banner extends \jsonAPI\controller {
  					$ti->type = $data['type'];
  					$ti->comparison = $data['comparison'];
  					$ti->data = $data['value'];
- 					
+
  					$targeting[$order] = $ti;
  				}
- 				
+
  				ksort($targeting);
  				$targeting = array_values($targeting);
 
@@ -332,13 +350,13 @@ class banner extends \jsonAPI\controller {
 
 			return new Response(array('bannerId' => $bannerInfo->bannerId));
 		}
-		
+
 		return $this->respondWithError('Unable to save banner');
 	}
-	
+
 	public function delete() {
 		$id = $this->filterNum($_POST['bannerId']);
-		
+
 		// permission check, yo
 		if( $id && !\OA_Permission::hasAccessToObject('banners', $id) ) {
 			return $this->respondWithError('No banner found');
