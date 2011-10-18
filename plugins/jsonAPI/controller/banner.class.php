@@ -10,6 +10,8 @@ require_once MAX_PATH.'/lib/OA/Dll/Zone.php';
 require_once LIB_PATH.'/Plugin/Component.php';
 require_once MAX_PATH.'/lib/OX/Util/Utils.php';
 
+require_once MAX_PATH.'/lib/max/Admin_DA.php';
+
 require_once MAX_PATH.'/plugins/jsonAPI/model/banner.class.php';
 
 class banner extends \jsonAPI\controller {
@@ -287,7 +289,7 @@ class banner extends \jsonAPI\controller {
 		}
 
 
-		if( $bannerDLL->modify(&$bannerInfo) ) {
+		if( $bannerDLL->modify(&$bannerInfo) || isset($_POST['zones'])  ) {
 
 			// make sure the banner is linked to the zone
 			$agencies = \OA_Dal::factoryDO('agency');
@@ -302,18 +304,34 @@ class banner extends \jsonAPI\controller {
 			$bannerData = false;
 			$bannerDLL->getBanner($bannerInfo->bannerId, &$bannerData);
 
-			$zones->width = $bannerData->width;
-			$zones->height = $bannerData->height;
+			if( isset($_POST['zones']) && is_array($_POST['zones']) ) {
+				$zones = $_POST['zones'];
+				$toLink = array();
+				$toUnLink = array();
 
-			$zones->find();
-			if( $zones->fetch() ) {
-				$zoneData = $zones->toArray();
-				if( $zoneData['zoneid'] ) {
-					$z = new \OA_Dll_Zone;
-					$z->linkBanner($zoneData['zoneid'], $bannerInfo->bannerId);
+				$currentlyLinked = \Admin_DA::getAdZones(
+					array('ad_id' => $bannerInfo->bannerId), false, 'zone_id'
+				);
+
+				$tmp = array();
+				foreach( $currentlyLinked as $z ) {
+					$tmp[] = $z['zone_id'];
+				}
+				$currentlyLinked = $tmp;
+
+				foreach( $zones as $zone ) {
+					if( !in_array($zone, $currentlyLinked) ) {
+						$z = new \OA_Dll_Zone;
+						$z->linkBanner($zone, $bannerInfo->bannerId);
+					}
+				}
+				foreach( $currentlyLinked as $zone ) {
+					if( !in_array($zone, $zones) ) {
+						$z = new \OA_Dll_Zone;
+						$z->unlinkBanner($zone, $bannerInfo->bannerId);
+					}
 				}
 			}
-
 			// set the targeting
 			if( isset($_POST['targeting']) && is_array($_POST['targeting']) ) {
 				$targeting = $_POST['targeting'];

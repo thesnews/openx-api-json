@@ -4,11 +4,15 @@ namespace jsonAPI\model;
 require_once MAX_PATH.'/lib/max/resources/res-iab.inc.php';
 require_once MAX_PATH.'/lib/OA/Dll/Banner.php';
 
+require_once MAX_PATH.'/lib/max/Admin_DA.php';
+
+require_once MAX_PATH.'/plugins/jsonAPI/model/generic.class.php';
+
 class banner extends \jsonAPI\model {
 	public static $IABSizes;
 	public function __init() {
 		$desc = array();
-		
+
         $this->stack['htmlTemplate'] = $this->stack['htmltemplate'];
         $this->stack['imageURL'] = $this->stack['imageurl'];
         $this->stack['storageType'] = $this->stack['storagetype'];
@@ -22,7 +26,7 @@ class banner extends \jsonAPI\model {
 			$this->stack['banner_session_capping'];
         $this->stack['block'] = $this->stack['banner_block'];
         $this->stack['alt'] = $this->stack['alt'];
-        
+
         $this->stack['bannername'] = $this->stack['description'];
 
 		$this->stack['campaignstatus'] = $this->stack['status'];
@@ -43,50 +47,64 @@ class banner extends \jsonAPI\model {
         if( isset($this->stack['width']) && isset($this->stack['height']) ) {
             $width = $this->stack['width'];
             $height = $this->stack['height'];
-            
+
             if( $width == -1 ) {
             	$width = '*';
             }
             if( $height == -1 ) {
             	$height = '*';
             }
-			
+
 			$size = sprintf('Custom (%s x %s', $width, $height);
-		
+
 			foreach( self::$IABSizes as $key => $sizes ) {
-				if( $sizes['width'] == $width 
+				if( $sizes['width'] == $width
 					&& $sizes['height'] == $height
 				) {
-					
+
 					$size = $GLOBALS['strIab'][$key];
 				}
 			}
-		
+
   			$desc['size'] = $size;
-            
+
         }
 
 		$bannerDll = new \OA_Dll_Banner;
 		$stats = array();
-		
+
 		$bannerDll->getBannerPublisherStatistics(
 			$this->stack['bannerid'], new \Date($this->stack['activate_time']),
 			new \Date, true, &$stats
 		);
 		$stats->find();
 		$stats->fetch();
-		
+
 		$desc['statistics'] = $stats->toArray();
 
 		$this->stack['description'] = $desc;
-		
+
 		$targetingData = array();
 		$bannerDll->getBannerTargeting(
 			$this->stack['bannerid'], &$targetingData
 		);
-		
+
 		$this->stack['targeting'] = $targetingData;
-		
+
+		// get the linked zones
+	    $aLinkedZones = \Admin_DA::getAdZones(
+	    	array('ad_id' => $this->stack['bannerId']), false, 'zone_id'
+	    );
+
+/*		$zones = array();
+		foreach( $aLinkedZones as $zone ) {
+			if( $zone['zone_id'] ) {
+				$zones[] = new \jsonAPI\model\generic($zone);
+			}
+		}
+*/
+		$this->stack['zones'] = $aLinkedZones;
+
 	}
 
 }
