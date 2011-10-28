@@ -47,9 +47,11 @@ class agency extends \jsonAPI\controller {
 		switch( $this->filterString($_POST['range']) ) {
 			case 'week':
 				$offset = '-1 week';
+				$range = $this->filterString($_POST['range']);
 				break;
 			case 'day':
 				$offset = '-1 day';
+				$range = $this->filterString($_POST['range']);
 				break;
 			case 'month':
 				$offset = '-1 month';
