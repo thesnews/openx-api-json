@@ -2,7 +2,7 @@
 namespace jsonAPI\controller;
 use jsonAPI\response as Response;
 
-//require_once MAX_PATH.'/lib/OA/Dll/Advertiser.php';
+require_once MAX_PATH.'/lib/OA/Dll/Advertiser.php';
 
 require_once MAX_PATH.'/plugins/jsonAPI/model/client.class.php';
 
@@ -211,6 +211,36 @@ class client extends \jsonAPI\controller {
 		return $this->respondWithError(false);
 
 
+	}
+
+	public function delete() {
+
+		$id = $this->filterNum($_POST['clientId']);
+
+		$agencyID = \OA_Permission::getAgencyId();
+
+        $doClients = \OA_Dal::factoryDO('clients');
+
+        if( $id ) {
+	        $doClients->get($id);
+			// permission check, yo
+	        if( $doClients->agencyid != $agencyID ) {
+				error_log('failed perm');
+				return $this->respondWithError('No client found');
+	        }
+	    } else {
+	    	error_log('failed id');
+			return $this->respondWithError('No client found');
+	    }
+
+		$clientDLL = new \OA_Dll_Advertiser;
+		if( !$clientDLL->delete($id) ) {
+			return $this->respondWithError('Unable to delete advertiser');
+		}
+
+		return new Response(array(
+			'clientId' => $id
+		));
 	}
 
 }
