@@ -116,6 +116,21 @@ class banner extends \jsonAPI\controller {
 			);
 		}
 
+
+		if( isset($_POST['limit']) ) {
+			if( isset($_POST['offset']) ) {
+				$banners->limit(
+					$this->filterNum($_POST['offset']),
+					$this->filterNum($_POST['limit'])
+				);
+			} else {
+				$banners->limit(
+					$this->filterNum($_POST['offset'])
+				);
+			}
+		}
+
+
 		$banners->find();
 
 		$out = array();

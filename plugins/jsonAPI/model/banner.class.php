@@ -77,10 +77,13 @@ class banner extends \jsonAPI\model {
 			$this->stack['bannerid'], new \Date($this->stack['activate_time']),
 			new \Date, true, &$stats
 		);
-		$stats->find();
-		$stats->fetch();
+		if( $stats ) {
+			$stats->find();
+			$stats->fetch();
 
-		$desc['statistics'] = $stats->toArray();
+
+			$desc['statistics'] = $stats->toArray();
+		}
 
 		$this->stack['description'] = $desc;
 

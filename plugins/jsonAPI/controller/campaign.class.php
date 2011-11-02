@@ -150,6 +150,19 @@ class campaign extends \jsonAPI\controller {
 			);
 		}
 
+		if( isset($_POST['limit']) ) {
+			if( isset($_POST['offset']) ) {
+				$campaigns->limit(
+					$this->filterNum($_POST['offset']),
+					$this->filterNum($_POST['limit'])
+				);
+			} else {
+				$campaigns->limit(
+					$this->filterNum($_POST['offset'])
+				);
+			}
+		}
+
 		$campaigns->find();
 
 		$out = array();
